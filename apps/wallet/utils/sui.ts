@@ -332,7 +332,7 @@ export function createSwapTransaction(
  * @param recipient Wallet address to receive SUI
  * @returns Promise that resolves when faucet request is complete
  */
-export async function requestDevnetSui(recipient: string): Promise<{ success: boolean; message: string }> {
+export async function requestDevnetSui(recipient: string): Promise<{ success: boolean; message: string; digest?: string }> {
   try {
     const normalizedAddress = normalizeSuiAddress(recipient)
     
@@ -357,9 +357,13 @@ export async function requestDevnetSui(recipient: string): Promise<{ success: bo
     const data = await response.json()
     console.log('Faucet response:', data)
 
+    // Extract transaction digest from response if available
+    const digest = data.task?.digest || data.transferredGasObjects?.[0]?.transferTxDigest
+
     return {
       success: true,
       message: 'Successfully requested 10 SUI from devnet faucet',
+      digest,
     }
   } catch (error) {
     console.error('Faucet request failed:', error)

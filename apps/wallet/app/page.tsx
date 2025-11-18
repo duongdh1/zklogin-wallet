@@ -91,7 +91,7 @@ export default function Page() {
                 <WalletAddress address={user?.address || ''} />
 
                 <div className="flex flex-wrap items-center gap-2">
-                  <SendTokenDialog balances={balances} onSend={handleSend} />
+                  <SendTokenDialog balances={balances} onSend={handleSend} onSuccess={handleFaucetSuccess} />
                   <ReceiveTokenDialog address={user?.address || ''} />
                   <FaucetDialog address={user?.address || ''} onSuccess={handleFaucetSuccess} />
                   <MintNftDialog />

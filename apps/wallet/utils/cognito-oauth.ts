@@ -2,9 +2,8 @@
  * AWS Cognito OAuth2 utilities for Hosted UI login flow
  */
 
-const COGNITO_USER_POOL_ID = process.env.NEXT_PUBLIC_COGNITO_USER_POOL_ID || 'ap-southeast-1_ZLX10720T'
-const COGNITO_APP_CLIENT_ID = process.env.NEXT_PUBLIC_COGNITO_APP_CLIENT_ID || '6lfpu6obc2fe37demi6on3lesh'
-const COGNITO_DOMAIN = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || 'ap-southeast-1_ZLX10720T'
+const COGNITO_APP_CLIENT_ID = process.env.NEXT_PUBLIC_COGNITO_APP_CLIENT_ID || ''
+const COGNITO_DOMAIN = process.env.NEXT_PUBLIC_COGNITO_DOMAIN || ''
 const APP_REDIRECT_URI = process.env.NEXT_PUBLIC_APP_REDIRECT_URI 
   ? `${process.env.NEXT_PUBLIC_APP_REDIRECT_URI}/login`
   : 'http://localhost:4000/login'

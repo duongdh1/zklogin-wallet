@@ -8,6 +8,7 @@ import { AuthenticatedLayout } from '@/components/templates/authenticated-layout
 import { Badge } from '@repo/ui/badge'
 import { NumberDisplay } from '@/components/atoms/number-display'
 import { fetchTransactions, TransactionRecord } from '@/utils/sui'
+import { getTransactionsByAddress } from '@/utils/transaction-tracker'
 
 export default function ActivityPage() {
   const { user } = useAuth()
@@ -26,11 +27,54 @@ export default function ActivityPage() {
 
     const loadTransactions = async () => {
       try {
-        const txns = await fetchTransactions(user.address)
-        setTransactions(txns)
+        // Get stored transactions from Google Sheets (instant)
+        const storedTxs = await getTransactionsByAddress(user.address)
+        
+        // Also fetch from on-chain to get full details (slower but complete)
+        const onChainTxns = await fetchTransactions(user.address)
+        
+        // Merge: prioritize on-chain data, add stored-only transactions
+        const allTxns = [...onChainTxns]
+        
+        // Add any stored transactions not yet on-chain or not in query results
+        storedTxs.forEach(stored => {
+          if (!onChainTxns.some(tx => tx.hash === stored.digest)) {
+            // Convert stored transaction to TransactionRecord format
+            allTxns.push({
+              id: stored.digest,
+              type: stored.type === 'send' ? 'send' : 'receive',
+              amount: '0',
+              symbol: 'SUI',
+              status: 'pending',
+              timestamp: new Date(stored.timestamp).toLocaleString(),
+              hash: stored.digest,
+              to: stored.type === 'send' ? 'Unknown' : user.address,
+              from: stored.type === 'send' ? user.address : 'Unknown',
+            })
+          }
+        })
+        
+        setTransactions(allTxns)
       } catch (error) {
         console.error('Failed to fetch transactions:', error)
-        setTransactions([])
+        // Fallback to stored transactions only
+        try {
+          const storedTxs = await getTransactionsByAddress(user.address)
+          const fallbackTxns = storedTxs.map(stored => ({
+            id: stored.digest,
+            type: stored.type === 'send' ? 'send' as const : 'receive' as const,
+            amount: '0',
+            symbol: 'SUI',
+            status: 'pending' as const,
+            timestamp: new Date(stored.timestamp).toLocaleString(),
+            hash: stored.digest,
+            to: stored.type === 'send' ? 'Unknown' : user.address,
+            from: stored.type === 'send' ? user.address : 'Unknown',
+          }))
+          setTransactions(fallbackTxns)
+        } catch {
+          setTransactions([])
+        }
       } finally {
         setLoading(false)
       }

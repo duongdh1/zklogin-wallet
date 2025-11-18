@@ -19,13 +19,15 @@ import { useAuth } from '@/contexts/auth-context'
 import { TransactionSaltForm } from './transaction-salt-form'
 import { toast } from 'sonner'
 import { Transaction } from '@mysten/sui/transactions'
+import { storeTransaction } from '@/utils/transaction-tracker'
 
 interface SendTokenDialogProps {
   balances: TokenBalance[]
   onSend: (token: string, amount: string, recipient: string) => void
+  onSuccess?: () => void
 }
 
-export function SendTokenDialog({ balances, onSend }: SendTokenDialogProps) {
+export function SendTokenDialog({ balances, onSend, onSuccess }: SendTokenDialogProps) {
   const { getZkLoginSession, user } = useAuth()
   const [open, setOpen] = useState(false)
   const [selectedToken, setSelectedToken] = useState('')
@@ -70,6 +72,9 @@ export function SendTokenDialog({ balances, onSend }: SendTokenDialogProps) {
       // Sign and execute transaction with PIN
       const txDigest = await signTransactionWithZkLogin(suiClient, transaction, zkLoginSession, pin, user!.address)
       
+      // Store transaction for reporting
+      storeTransaction(txDigest, user!.address, 'send')
+      
       console.log('Transaction sent:', txDigest)
       
       // Call the onSend callback for UI updates
@@ -84,6 +89,13 @@ export function SendTokenDialog({ balances, onSend }: SendTokenDialogProps) {
       setTransactionData(null)
       
       toast.success(`Transaction sent successfully! Hash: ${txDigest}`)
+      
+      // Trigger balance refresh after successful send
+      if (onSuccess) {
+        setTimeout(() => {
+          onSuccess()
+        }, 2000)
+      }
     } catch (error) {
       console.error('Send failed:', error)
       setTransactionError(error instanceof Error ? error.message : 'Unknown error')

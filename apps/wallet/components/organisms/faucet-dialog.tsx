@@ -13,6 +13,7 @@ import { Button } from '@repo/ui/button'
 import { Droplet } from 'lucide-react'
 import { requestDevnetSui } from '@/utils/sui'
 import { toast } from 'sonner'
+import { storeTransaction } from '@/utils/transaction-tracker'
 
 interface FaucetDialogProps {
   address: string
@@ -34,6 +35,11 @@ export function FaucetDialog({ address, onSuccess }: FaucetDialogProps) {
       const result = await requestDevnetSui(address)
       
       if (result.success) {
+        // Store faucet transaction (digest from response if available)
+        if (result.digest) {
+          storeTransaction(result.digest, address, 'faucet')
+        }
+        
         toast.success(result.message)
         setOpen(false)
         // Trigger balance refresh after successful faucet

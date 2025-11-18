@@ -8,7 +8,8 @@ import {
   Activity,
   Settings, 
   LogOut,
-  User
+  User,
+  History
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import {
@@ -84,6 +85,11 @@ export function AuthenticatedLayout({ children, breadcrumbItems, balances, onSen
       href: '/activity',
       icon: Activity,
       label: 'Activity'
+    },
+    {
+      href: '/transaction-history',
+      icon: History,
+      label: 'TX History'
     }
   ]
 
