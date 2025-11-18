@@ -1,18 +1,25 @@
 'use client'
 
 import { useCallback } from 'react'
-import type { ZkLoginProof } from '@mysten/sui/client'
 import {
   useSessionStorage,
   useSessionStorageString,
-  useSessionStorageNumber,
 } from '@/hooks/use-session-storage'
+
+// ZkLogin proof response from prover service
+export interface ZkLoginProofResponse {
+  proofPoints: {
+    a: string[]
+    b: string[][]
+    c: string[]
+  }
+}
 
 export interface ZkLoginSession {
   ephemeralSecretKey: string
   randomness: string
   nonce: string
-  zkProof: ZkLoginProof | null
+  zkProof: ZkLoginProofResponse | null
   maxEpoch: number
   idToken: string
 }
@@ -24,9 +31,9 @@ export interface ZkLoginSession {
 export function useZkLoginSession() {
   const [ephemeralSecretKey, setEphemeralSecretKey, clearEphemeralSecretKey] = useSessionStorageString('ephemeralSecretKey', '')
   const [randomness, setRandomness, clearRandomness] = useSessionStorageString('randomness', '')
-  const [nonce, setNonce, clearNonce] = useSessionStorageString('nonce', '')
-  const [zkProof, setZkProof, clearZkProof] = useSessionStorage<ZkLoginProof | null>('zkProof', null)
-  const [maxEpoch, setMaxEpoch, clearMaxEpoch] = useSessionStorageNumber('maxEpoch', 0)
+  const [nonce, setNonce, clearNonce] = useSessionStorage('nonce', '')
+  const [zkProof, setZkProof, clearZkProof] = useSessionStorage<ZkLoginProofResponse | null>('zkProof', null)
+  const [maxEpoch, setMaxEpoch, clearMaxEpoch] = useSessionStorage('maxEpoch', 0)
   const [idToken, setIdToken, clearIdToken] = useSessionStorageString('idToken', '')
 
   // Get complete session data

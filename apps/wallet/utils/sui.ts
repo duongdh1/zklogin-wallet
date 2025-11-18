@@ -60,7 +60,7 @@ export function toMist(amount: string): bigint {
 
 // Helper function to extract JWT header and issuer information  
 function extractJwtInfo(idToken: string): { headerBase64: string; issBase64Details: { value: string; indexMod4: number } } {
-  // Split JWT to get header part
+  // Split JWT to get header and payload parts
   const parts = idToken.split('.')
   if (parts.length !== 3) {
     throw new Error('Invalid JWT format')
@@ -72,13 +72,26 @@ function extractJwtInfo(idToken: string): { headerBase64: string; issBase64Detai
     throw new Error('Missing JWT header')
   }
   
+  // Second part is the payload (base64 encoded)
+  const payloadBase64 = parts[1]
+  if (!payloadBase64) {
+    throw new Error('Missing JWT payload')
+  }
+  
   // Decode payload to get issuer
   const payload = jwtDecode<JwtPayload>(idToken)
   const issuer = payload.iss || ''
   
-  // The indexMod4 represents where in the base64 padding the iss field starts
-  // This is calculated based on the position of "iss" in the JWT payload
-  const indexMod4 = issuer.length % 4
+  // Find the position of "iss" in the base64-encoded payload
+  // The indexMod4 represents the offset where the iss value starts in the base64 string mod 4
+  // This is used by the zkLogin verifier to extract the correct bytes
+  const payloadDecoded = atob(payloadBase64)
+  const issStart = payloadDecoded.indexOf(`"iss":"${issuer}"`)
+  
+  // Calculate indexMod4 based on where "iss" value appears in the payload
+  // We need the position of the actual value, not the key
+  const issValueStart = issStart + 7 // length of '"iss":"'
+  const indexMod4 = issValueStart % 4
   
   return {
     headerBase64,
@@ -254,11 +267,7 @@ export async function signTransactionWithZkLogin(
 
     console.log('signature inputs', {
       inputs: {
-        proofPoints: {
-          a: zkLoginSessionData.zkProof.a,
-          b: zkLoginSessionData.zkProof.b,
-          c: zkLoginSessionData.zkProof.c,
-        },
+        ...zkLoginSessionData.zkProof,
         issBase64Details: jwtInfo.issBase64Details,
         headerBase64: jwtInfo.headerBase64,
         addressSeed: addressSeed,
@@ -268,13 +277,10 @@ export async function signTransactionWithZkLogin(
     });
 
     // Generate the zkLogin signature
+    // zkProof contains: { proofPoints: { a, b, c } }
     const zkLoginSignature = getZkLoginSignature({
       inputs: {
-        proofPoints: {
-          a: zkLoginSessionData.zkProof.a,
-          b: zkLoginSessionData.zkProof.b,
-          c: zkLoginSessionData.zkProof.c,
-        },
+        proofPoints: zkLoginSessionData.zkProof.proofPoints,
         issBase64Details: jwtInfo.issBase64Details,
         headerBase64: jwtInfo.headerBase64,
         addressSeed: addressSeed,

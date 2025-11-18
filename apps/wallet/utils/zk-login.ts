@@ -1,7 +1,6 @@
 // zkLogin utility functions for Cognito OAuth flow and ZK proof generation
 
 import { SuiClient } from '@mysten/sui/client'
-import type { ZkLoginProof } from '@mysten/sui/client'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import { 
   generateNonce,
@@ -10,7 +9,7 @@ import {
 } from '@mysten/sui/zklogin'
 // @ts-ignore
 import { jwtDecode } from 'jwt-decode'
-import { ZkLoginSession } from '@/hooks/use-zklogin-session'
+import { ZkLoginSession, ZkLoginProofResponse } from '@/hooks/use-zklogin-session'
 
 // zkLogin proof generation options
 const PROVER_URL = 'https://prover-dev.mystenlabs.com/v1'
@@ -56,7 +55,7 @@ export async function generateZkLoginProof(
   randomness: string,
   jwtToken: string,
   salt: string
-): Promise<ZkLoginProof> {
+): Promise<ZkLoginProofResponse> {
   try {
     console.log('Generating zkLogin proof...')
 
@@ -89,13 +88,9 @@ export async function generateZkLoginProof(
 
     const responseData = await response.json()
 
-    
-    // Transform the response to match ZkLoginProof type
-    return {
-      a: responseData.proofPoints.a,
-      b: responseData.proofPoints.b,
-      c: responseData.proofPoints.c
-    }
+    // Return the full proof response (proofPoints contain a, b, c)
+    // The prover returns: { proofPoints: { a, b, c } }
+    return responseData
   } catch (error) {
     console.error('Failed to generate ZK proof:', error)
     throw error
