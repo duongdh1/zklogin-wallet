@@ -170,6 +170,9 @@ export function clearTokensFromUrl(): void {
 export function parseJwt(token: string): Record<string, any> {
   try {
     const base64Url = token.split('.')[1]
+    if (!base64Url) {
+      throw new Error('Invalid JWT token format')
+    }
     const base64 = base64Url.replace(/-/g, '+').replace(/_/g, '/')
     const jsonPayload = decodeURIComponent(
       atob(base64)
