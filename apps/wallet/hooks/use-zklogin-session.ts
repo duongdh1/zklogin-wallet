@@ -8,11 +8,15 @@ import {
 
 // ZkLogin proof response from prover service
 export interface ZkLoginProofResponse {
-  proofPoints: {
+  proofPoints?: {
     a: string[]
     b: string[][]
     c: string[]
   }
+  // Direct format (when proofPoints wrapper is missing)
+  a?: string[]
+  b?: string[][]
+  c?: string[]
 }
 
 export interface ZkLoginSession {

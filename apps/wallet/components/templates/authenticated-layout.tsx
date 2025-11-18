@@ -1,7 +1,8 @@
 'use client'
 
 import { useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, usePathname } from 'next/navigation'
+import Link from 'next/link'
 import { 
   LayoutDashboard, 
   TrendingUp, 
@@ -47,6 +48,7 @@ interface AuthenticatedLayoutProps {
 export function AuthenticatedLayout({ children, breadcrumbItems, balances, onSend }: AuthenticatedLayoutProps) {
   const { user, logout, isLoading } = useAuth()
   const router = useRouter()
+  const pathname = usePathname()
 
   useEffect(() => {
     if (!isLoading && !user) {
@@ -131,11 +133,11 @@ export function AuthenticatedLayout({ children, breadcrumbItems, balances, onSen
               <SidebarMenu>
                 {menu.map((item, index) => (
                   <SidebarMenuItem key={index}>
-                    <SidebarMenuButton asChild>
-                      <a href={item.href}>
+                    <SidebarMenuButton asChild isActive={pathname === item.href}>
+                      <Link href={item.href || '#'} prefetch={true}>
                         <item.icon className="h-4 w-4" />
                         <span>{item.label}</span>
-                      </a>
+                      </Link>
                     </SidebarMenuButton>
                   </SidebarMenuItem>
                 ))}
@@ -151,11 +153,11 @@ export function AuthenticatedLayout({ children, breadcrumbItems, balances, onSen
                 {footerMenu.map((item, index) => (
                   <SidebarMenuItem key={index}>
                     {item.href ? (
-                      <SidebarMenuButton asChild>
-                        <a href={item.href}>
+                      <SidebarMenuButton asChild isActive={pathname === item.href}>
+                        <Link href={item.href} prefetch={true}>
                           <item.icon className="h-4 w-4" />
                           <span>{item.label}</span>
-                        </a>
+                        </Link>
                       </SidebarMenuButton>
                     ) : (
                       <SidebarMenuButton onClick={item.onClick}>

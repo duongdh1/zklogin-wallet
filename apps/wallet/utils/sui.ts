@@ -265,9 +265,19 @@ export async function signTransactionWithZkLogin(
       audString
     ).toString()
 
+    // Prepare inputs for zkLogin signature
+    // Check if zkProof has proofPoints wrapper or is direct {a, b, c}
+    const proofPoints = 'proofPoints' in zkLoginSessionData.zkProof && zkLoginSessionData.zkProof.proofPoints
+      ? zkLoginSessionData.zkProof.proofPoints 
+      : (zkLoginSessionData.zkProof as { a: string[]; b: string[][]; c: string[] })
+
+    if (!proofPoints || !proofPoints.a || !proofPoints.b || !proofPoints.c) {
+      throw new Error('Invalid zkProof structure')
+    }
+
     console.log('signature inputs', {
       inputs: {
-        ...zkLoginSessionData.zkProof,
+        proofPoints,
         issBase64Details: jwtInfo.issBase64Details,
         headerBase64: jwtInfo.headerBase64,
         addressSeed: addressSeed,
@@ -277,10 +287,9 @@ export async function signTransactionWithZkLogin(
     });
 
     // Generate the zkLogin signature
-    // zkProof contains: { proofPoints: { a, b, c } }
     const zkLoginSignature = getZkLoginSignature({
       inputs: {
-        proofPoints: zkLoginSessionData.zkProof.proofPoints,
+        proofPoints,
         issBase64Details: jwtInfo.issBase64Details,
         headerBase64: jwtInfo.headerBase64,
         addressSeed: addressSeed,
