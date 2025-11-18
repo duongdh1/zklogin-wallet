@@ -7,7 +7,6 @@ import { AuthenticatedLayout } from '@/components/templates/authenticated-layout
 import { Button } from '@repo/ui/button'
 import { Badge } from '@repo/ui/badge'
 import { Download, Trash2, Copy, ExternalLink } from 'lucide-react'
-import { NumberDisplay } from '@/components/atoms/number-display'
 import {
   getAllTransactions,
   getTransactionsByAddress,
@@ -304,37 +303,6 @@ export default function TransactionHistoryPage() {
             </CardContent>
           </Card>
         )}
-
-        {/* Instructions */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Reporting Requirements</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="p-3 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
-              <p className="text-sm text-blue-900 dark:text-blue-100">
-                <strong>Goal:</strong> 1,000 Devnet transactions across 100 unique addresses
-              </p>
-            </div>
-            
-            <div className="text-sm space-y-2">
-              <p>To meet the requirements:</p>
-              <ul className="list-disc list-inside space-y-1 ml-4">
-                <li>Generate at least 1,000 transactions on Devnet</li>
-                <li>Use at least 100 different wallet addresses</li>
-                <li>Store all transaction digests</li>
-                <li>Export as JSON file when ready</li>
-                <li>Submit the JSON file to Sui Dev team</li>
-              </ul>
-            </div>
-
-            <div className="p-3 bg-amber-50 dark:bg-amber-950 rounded-lg border border-amber-200 dark:border-amber-800">
-              <p className="text-sm text-amber-900 dark:text-amber-100">
-                <strong>Tip:</strong> Use PTBs (Programmable Transaction Blocks) to execute multiple transactions programmatically
-              </p>
-            </div>
-          </CardContent>
-        </Card>
       </div>
     </AuthenticatedLayout>
   )

@@ -1,11 +1,10 @@
 // Sui API service for fetching wallet data and token prices
-import { SuiClient, getFullnodeUrl } from '@mysten/sui/client'
+import { SuiClient } from '@mysten/sui/client'
 import { normalizeSuiAddress } from '@mysten/sui/utils'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
 import { Transaction } from '@mysten/sui/transactions'
 import { getZkLoginSignature, genAddressSeed } from '@mysten/sui/zklogin'
 import { ZkLoginSession } from '@/hooks/use-zklogin-session'
-// @ts-ignore
 import { jwtDecode } from 'jwt-decode'
 
 export interface TokenBalance {
@@ -38,6 +37,20 @@ export const SUI_CHAINS = {
 
 export const SUI_DECIMALS = 9
 
+// JWT payload interface
+interface JwtPayload {
+  iss?: string
+  sub?: string
+  aud?: string[] | string
+  exp?: number
+  nbf?: number
+  iat?: number
+  jti?: string
+  email?: string
+  name?: string
+  nonce?: string
+}
+
 // Convert SUI amount string to MIST (smallest unit) using BigInt for precision
 export function toMist(amount: string): bigint {
   const [intPart, fracPart = ''] = amount.split('.')
@@ -45,36 +58,33 @@ export function toMist(amount: string): bigint {
   return BigInt(intPart || '0') * BigInt(1_000_000_000) + BigInt(frac9)
 }
 
-// Helper function to extract JWT header and issuer information
+// Helper function to extract JWT header and issuer information  
 function extractJwtInfo(idToken: string): { headerBase64: string; issBase64Details: { value: string; indexMod4: number } } {
-  try {
-    // Decode JWT header
-    const header = jwtDecode(idToken, { header: true }) as any
-    const headerBase64 = btoa(JSON.stringify(header))
-    
-    // Decode JWT payload to get issuer
-    const payload = jwtDecode(idToken) as any
-    const issuer = payload.iss || ''
-    
-    // Calculate indexMod4 for issuer
-    const indexMod4 = issuer.length % 4
-    
-    return {
-      headerBase64,
-      issBase64Details: {
-        value: issuer,
-        indexMod4
-      }
-    }
-  } catch (error) {
-    console.error('Failed to extract JWT info:', error)
-    // Return fallback values
-    return {
-      headerBase64: 'eyJhbGciOiJSUzI1NiIsInR5cCI6IkpXVCJ9', // Base64 of {"alg":"RS256","typ":"JWT"}
-      issBase64Details: {
-        value: 'https://accounts.google.com',
-        indexMod4: 0
-      }
+  // Split JWT to get header part
+  const parts = idToken.split('.')
+  if (parts.length !== 3) {
+    throw new Error('Invalid JWT format')
+  }
+  
+  // First part is the header (already base64 encoded)
+  const headerBase64 = parts[0]
+  if (!headerBase64) {
+    throw new Error('Missing JWT header')
+  }
+  
+  // Decode payload to get issuer
+  const payload = jwtDecode<JwtPayload>(idToken)
+  const issuer = payload.iss || ''
+  
+  // The indexMod4 represents where in the base64 padding the iss field starts
+  // This is calculated based on the position of "iss" in the JWT payload
+  const indexMod4 = issuer.length % 4
+  
+  return {
+    headerBase64,
+    issBase64Details: {
+      value: issuer,
+      indexMod4
     }
   }
 }
@@ -222,14 +232,24 @@ export async function signTransactionWithZkLogin(
     const jwtInfo = extractJwtInfo(zkLoginSessionData.idToken)
     
     // Decode JWT to get aud (audience)
-    const decodedJwt = jwtDecode(zkLoginSessionData.idToken) as any
+    const decodedJwt = jwtDecode<JwtPayload>(zkLoginSessionData.idToken)
+    
+    if (!decodedJwt.sub || !decodedJwt.aud) {
+      throw new Error('Invalid JWT: missing sub or aud field')
+    }
+
+    // Ensure aud is a string (sometimes it's an array, take first element)
+    const audString = Array.isArray(decodedJwt.aud) ? decodedJwt.aud[0] : decodedJwt.aud
+    if (!audString) {
+      throw new Error('Invalid JWT: aud field is empty')
+    }
 
     // Generate address seed from user PIN
     const addressSeed = genAddressSeed(
       BigInt(userPin),
       'sub',
       decodedJwt.sub,
-      decodedJwt.aud
+      audString
     ).toString()
 
     console.log('signature inputs', {
