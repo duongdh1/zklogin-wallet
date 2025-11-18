@@ -1,0 +1,8 @@
+@import "tailwindcss";
+
+@source "./app/**/*.{js,ts,jsx,tsx}";
+@source "./pages/**/*.{js,ts,jsx,tsx}";
+@source "./components/**/*.{js,ts,jsx,tsx}";
+@source "../../../packages/ui/src/**/*.{js,ts,jsx,tsx}";
+
+@import "../../../packages/ui/styles.css";

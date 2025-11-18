@@ -1,0 +1,57 @@
+@layer components {
+  /* Logo styles */
+  .logo {
+    transition: transform 0.2s ease-in-out;
+  }
+
+  .logo:hover {
+    transform: scale(1.05);
+  }
+
+  /* Social login button styles */
+  .socialLoginButton {
+    transition: all 0.2s ease-in-out;
+    border-radius: 8px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+  }
+
+  .socialLoginButton:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+
+  .socialLoginButton:active {
+    transform: translateY(0);
+  }
+
+  .socialLoginButton:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  /* Loading state for buttons */
+  .loadingContainer {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+
+  .loadingSpinner {
+    animation: spin 1s linear infinite;
+    border-radius: 50%;
+    border: 2px solid transparent;
+    border-top: 2px solid currentColor;
+  }
+
+  @keyframes spin {
+    to {
+      transform: rotate(360deg);
+    }
+  }
+}
