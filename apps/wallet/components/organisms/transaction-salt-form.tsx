@@ -10,9 +10,12 @@ interface TransactionSaltFormProps {
   isLoading?: boolean
   disabled?: boolean
   transactionDetails?: {
-    token: string
-    amount: string
-    recipient: string
+    token?: string
+    amount?: string
+    recipient?: string
+    name?: string
+    description?: string
+    imageUrl?: string
   } | null
 }
 

@@ -8,14 +8,16 @@ import { NumberDisplay } from '@/components/atoms/number-display'
 interface TokenBalanceProps {
   address: string
   onBalancesChange: (balances: TokenBalanceType[], totalValue: number) => void
+  refreshTrigger?: number
 }
 
-export function TokenBalance({ address, onBalancesChange }: TokenBalanceProps) {
+export function TokenBalance({ address, onBalancesChange, refreshTrigger }: TokenBalanceProps) {
   const [tokens, setTokens] = useState<TokenBalanceType[]>([])
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
     const fetchBalances = async () => {
+      setLoading(true)
       try {
         const balances = await fetchTokenBalances(address)
         setTokens(balances)
@@ -30,8 +32,10 @@ export function TokenBalance({ address, onBalancesChange }: TokenBalanceProps) {
       }
     }
 
-    fetchBalances()
-  }, [address])
+    if (address) {
+      fetchBalances()
+    }
+  }, [address, refreshTrigger, onBalancesChange])
 
   const calculateTotalValue = (balances: TokenBalanceType[]): number => {
     return balances.reduce((total, token) => total + parseFloat(token.usdValue), 0)

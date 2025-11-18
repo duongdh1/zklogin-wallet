@@ -7,6 +7,8 @@ import { AuthenticatedLayout } from '../components/templates/authenticated-layou
 import { TokenBalance } from '../components/molecules/token-balance'
 import { ReceiveTokenDialog } from '../components/organisms/receive-token-dialog'
 import { SendTokenDialog } from '../components/organisms/send-token-dialog'
+import { FaucetDialog } from '../components/organisms/faucet-dialog'
+import { MintNftDialog } from '../components/organisms/mint-nft-dialog'
 import { NumberDisplay } from '../components/atoms/number-display'
 import { WalletAddress } from '../components/atoms/wallet-address'
 import { TrendingUp, TrendingDown } from 'lucide-react'
@@ -16,6 +18,7 @@ export default function Page() {
   const { user } = useAuth()
   const [balances, setBalances] = useState<TokenBalanceType[]>([])
   const [totalValue, setTotalValue] = useState(0)
+  const [refreshTrigger, setRefreshTrigger] = useState(0)
 
   const breadcrumbItems = [
     { label: 'Balances' }
@@ -31,6 +34,11 @@ export default function Page() {
     console.log('Sending:', { token, amount, recipient })
     // Simulate transaction
     alert(`Sending ${amount} ${token} to ${recipient}`)
+  }
+
+  const handleFaucetSuccess = () => {
+    // Refresh balance after faucet
+    setRefreshTrigger(prev => prev + 1)
   }
 
   return (
@@ -82,9 +90,11 @@ export default function Page() {
               <div className="space-y-4">
                 <WalletAddress address={user?.address || ''} />
 
-                <div className="flex items-center space-x-2">
+                <div className="flex flex-wrap items-center gap-2">
                   <SendTokenDialog balances={balances} onSend={handleSend} />
                   <ReceiveTokenDialog address={user?.address || ''} />
+                  <FaucetDialog address={user?.address || ''} onSuccess={handleFaucetSuccess} />
+                  <MintNftDialog />
                 </div>
               </div>
             </div>
@@ -101,6 +111,7 @@ export default function Page() {
               <TokenBalance 
                 address={user?.address || ''} 
                 onBalancesChange={handleBalancesChange}
+                refreshTrigger={refreshTrigger}
               />
             </CardContent>
           </Card>

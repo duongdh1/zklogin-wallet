@@ -38,6 +38,13 @@ export const SUI_CHAINS = {
 
 export const SUI_DECIMALS = 9
 
+// Convert SUI amount string to MIST (smallest unit) using BigInt for precision
+export function toMist(amount: string): bigint {
+  const [intPart, fracPart = ''] = amount.split('.')
+  const frac9 = (fracPart + '000000000').slice(0, 9)
+  return BigInt(intPart || '0') * BigInt(1_000_000_000) + BigInt(frac9)
+}
+
 // Helper function to extract JWT header and issuer information
 function extractJwtInfo(idToken: string): { headerBase64: string; issBase64Details: { value: string; indexMod4: number } } {
   try {
@@ -286,15 +293,12 @@ export function createTransferTransaction(
 
   const txb = new Transaction()
   
-  // Convert amount to minor units
-  const amountInSmallestUnit = Math.floor(parseFloat(amount) * Math.pow(10, SUI_DECIMALS))
+  // Convert amount to MIST using BigInt for precision (following zklogin pattern)
+  const amountMist = toMist(amount)
   
-  // Set gas budget TODO: make this dynamic
-  txb.setGasBudget(10000000) // 0.01 SUI
-  
-  // Split coins and transfer - use a different approach to avoid gas conflicts
-  const [coin] = txb.splitCoins(txb.gas, [txb.pure.u64(amountInSmallestUnit)])
-  txb.transferObjects([coin], txb.pure.address(recipient))
+  // Split coins and transfer (no manual gas budget needed)
+  const [coin] = txb.splitCoins(txb.gas, [amountMist])
+  txb.transferObjects([coin], recipient)
   
   return txb
 }
@@ -318,6 +322,80 @@ export function createSwapTransaction(
   txb.moveCall({
     target: '0x2::coin::join',
     arguments: [txb.object(coin), txb.gas],
+  })
+  
+  return txb
+}
+
+/**
+ * Request SUI from devnet faucet
+ * @param recipient Wallet address to receive SUI
+ * @returns Promise that resolves when faucet request is complete
+ */
+export async function requestDevnetSui(recipient: string): Promise<{ success: boolean; message: string }> {
+  try {
+    const normalizedAddress = normalizeSuiAddress(recipient)
+    
+    // Request from devnet faucet (v2 endpoint gives 10 SUI)
+    const response = await fetch('https://faucet.devnet.sui.io/v2/gas', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        FixedAmountRequest: {
+          recipient: normalizedAddress,
+        },
+      }),
+    })
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}))
+      throw new Error(errorData.message || `Faucet request failed: ${response.statusText}`)
+    }
+
+    const data = await response.json()
+    console.log('Faucet response:', data)
+
+    return {
+      success: true,
+      message: 'Successfully requested 10 SUI from devnet faucet',
+    }
+  } catch (error) {
+    console.error('Faucet request failed:', error)
+    return {
+      success: false,
+      message: error instanceof Error ? error.message : 'Failed to request from faucet',
+    }
+  }
+}
+
+/**
+ * Create a transaction to mint an NFT
+ * @param name NFT name
+ * @param description NFT description
+ * @param imageUrl NFT image URL
+ * @returns Transaction object
+ */
+export function createMintNftTransaction(
+  name: string,
+  description: string,
+  imageUrl: string
+): Transaction {
+  const txb = new Transaction()
+  
+  // Set gas budget
+  txb.setGasBudget(10000000) // 0.01 SUI
+  
+  // Create NFT object using Move call
+  // This uses the Sui framework's display standard
+  txb.moveCall({
+    target: '0x2::display::new',
+    arguments: [
+      txb.pure.string(name),
+      txb.pure.string(description),
+      txb.pure.string(imageUrl),
+    ],
   })
   
   return txb
