@@ -102,6 +102,7 @@ export async function fetchTransactions(address: string): Promise<TransactionRec
 
     const transactions: TransactionRecord[] = []
     
+    console.log('Sent transactions:', sentTxns.data)
     // Process sent transactions
     for (const txn of sentTxns.data) {
       const effects = txn.effects
@@ -125,7 +126,7 @@ export async function fetchTransactions(address: string): Promise<TransactionRec
         from: normalizedAddress
       })
     }
-    
+    console.log('Received transactions:', receivedTxns.data)
     // Process received transactions
     for (const txn of receivedTxns.data) {
       const effects = txn.effects
