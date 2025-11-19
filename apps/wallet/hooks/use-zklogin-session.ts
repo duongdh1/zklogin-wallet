@@ -7,16 +7,18 @@ import {
 } from '@/hooks/use-session-storage'
 
 // ZkLogin proof response from prover service
+// This matches the PartialZkLoginSignature type (inputs without addressSeed)
 export interface ZkLoginProofResponse {
-  proofPoints?: {
+  proofPoints: {
     a: string[]
     b: string[][]
     c: string[]
   }
-  // Direct format (when proofPoints wrapper is missing)
-  a?: string[]
-  b?: string[][]
-  c?: string[]
+  issBase64Details: {
+    value: string
+    indexMod4: number
+  }
+  headerBase64: string
 }
 
 export interface ZkLoginSession {

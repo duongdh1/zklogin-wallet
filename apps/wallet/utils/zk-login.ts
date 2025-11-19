@@ -74,10 +74,9 @@ export async function generateZkLoginProof(
         jwt: jwtToken,
         extendedEphemeralPublicKey: ephemeralKeyPair.getPublicKey().toBase64(),
         jwtRandomness: randomness,
-        maxEpoch: maxEpoch.toString(),
+        maxEpoch,
         keyClaimName: 'sub',
-        keyClaimValue: jwt.sub,
-        salt: btoa(salt),
+        salt,
       }),
     })
 

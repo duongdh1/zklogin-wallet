@@ -58,50 +58,6 @@ export function toMist(amount: string): bigint {
   return BigInt(intPart || '0') * BigInt(1_000_000_000) + BigInt(frac9)
 }
 
-// Helper function to extract JWT header and issuer information  
-function extractJwtInfo(idToken: string): { headerBase64: string; issBase64Details: { value: string; indexMod4: number } } {
-  // Split JWT to get header and payload parts
-  const parts = idToken.split('.')
-  if (parts.length !== 3) {
-    throw new Error('Invalid JWT format')
-  }
-  
-  // First part is the header (already base64 encoded)
-  const headerBase64 = parts[0]
-  if (!headerBase64) {
-    throw new Error('Missing JWT header')
-  }
-  
-  // Second part is the payload (base64 encoded)
-  const payloadBase64 = parts[1]
-  if (!payloadBase64) {
-    throw new Error('Missing JWT payload')
-  }
-  
-  // Decode payload to get issuer
-  const payload = jwtDecode<JwtPayload>(idToken)
-  const issuer = payload.iss || ''
-  
-  // Find the position of "iss" in the base64-encoded payload
-  // The indexMod4 represents the offset where the iss value starts in the base64 string mod 4
-  // This is used by the zkLogin verifier to extract the correct bytes
-  const payloadDecoded = atob(payloadBase64)
-  const issStart = payloadDecoded.indexOf(`"iss":"${issuer}"`)
-  
-  // Calculate indexMod4 based on where "iss" value appears in the payload
-  // We need the position of the actual value, not the key
-  const issValueStart = issStart + 7 // length of '"iss":"'
-  const indexMod4 = issValueStart % 4
-  
-  return {
-    headerBase64,
-    issBase64Details: {
-      value: issuer,
-      indexMod4
-    }
-  }
-}
-
 // Token metadata mapping
 export const TOKEN_METADATA: { [key: string]: { symbol: string; name: string; decimals: number } } = {
   '0x2::sui::SUI': { symbol: 'SUI', name: 'Sui', decimals: 9 },
@@ -241,10 +197,7 @@ export async function signTransactionWithZkLogin(
       throw new Error('ZK proof not found. Please complete the authentication process.')
     }
 
-    // Extract JWT information
-    const jwtInfo = extractJwtInfo(zkLoginSessionData.idToken)
-    
-    // Decode JWT to get aud (audience)
+    // Decode JWT to get sub and aud for address seed generation
     const decodedJwt = jwtDecode<JwtPayload>(zkLoginSessionData.idToken)
     
     if (!decodedJwt.sub || !decodedJwt.aud) {
@@ -265,44 +218,22 @@ export async function signTransactionWithZkLogin(
       audString
     ).toString()
 
-    // Prepare inputs for zkLogin signature
-    // Check if zkProof has proofPoints wrapper or is direct {a, b, c}
-    if (!zkLoginSessionData.zkProof) {
-      throw new Error('ZK proof not found')
-    }
-    
-    // Extract proof points - handle both wrapped and unwrapped formats
-    const proofPoints = zkLoginSessionData.zkProof.proofPoints ?? zkLoginSessionData.zkProof
-    
-    if (!proofPoints.a || !proofPoints.b || !proofPoints.c) {
-      throw new Error('Invalid zkProof structure: missing proof points')
-    }
-    
-    // Type assertion for the correct structure expected by getZkLoginSignature
-    const validProofPoints = {
-      a: proofPoints.a as string[],
-      b: proofPoints.b as string[][],
-      c: proofPoints.c as string[]
-    }
-
     console.log('signature inputs', {
       inputs: {
-        proofPoints: validProofPoints,
-        issBase64Details: jwtInfo.issBase64Details,
-        headerBase64: jwtInfo.headerBase64,
-        addressSeed: addressSeed,
+        ...zkLoginSessionData.zkProof,
+        addressSeed,
       },
       maxEpoch: zkLoginSessionData.maxEpoch,
       userSignature,
     });
 
     // Generate the zkLogin signature
+    // The zkProof already contains proofPoints, issBase64Details, and headerBase64 from the prover
+    // We just need to add the addressSeed
     const zkLoginSignature = getZkLoginSignature({
       inputs: {
-        proofPoints: validProofPoints,
-        issBase64Details: jwtInfo.issBase64Details,
-        headerBase64: jwtInfo.headerBase64,
-        addressSeed: addressSeed,
+        ...zkLoginSessionData.zkProof,
+        addressSeed,
       },
       maxEpoch: zkLoginSessionData.maxEpoch,
       userSignature,
