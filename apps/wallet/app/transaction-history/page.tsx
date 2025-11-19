@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@repo
 import { AuthenticatedLayout } from '@/components/templates/authenticated-layout'
 import { Button } from '@repo/ui/button'
 import { Badge } from '@repo/ui/badge'
-import { Download, Trash2, Copy, ExternalLink } from 'lucide-react'
+import { Download, Trash2, Copy, ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react'
 import {
   getAllTransactions,
   getTransactionsByAddress,
@@ -19,6 +19,8 @@ import {
 import { toast } from 'sonner'
 
 type FilterMode = 'current' | 'all'
+
+const ITEMS_PER_PAGE = 5
 
 interface StoredTransaction {
   digest: string
@@ -46,10 +48,24 @@ export default function TransactionHistoryPage() {
   const [transactions, setTransactions] = useState<StoredTransaction[]>([])
   const [stats, setStats] = useState<TransactionStats | null>(null)
   const [exportPreview, setExportPreview] = useState<AddressTransactionsArray>([])
+  const [currentPage, setCurrentPage] = useState(1)
 
   const breadcrumbItems = [
     { label: 'Transaction History' }
   ]
+
+  // Pagination calculations
+  const totalPages = Math.ceil(transactions.length / ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * ITEMS_PER_PAGE
+  const endIndex = startIndex + ITEMS_PER_PAGE
+  const paginatedTransactions = transactions.slice(startIndex, endIndex)
+
+  const goToPage = (page: number) => {
+    setCurrentPage(Math.max(1, Math.min(page, totalPages)))
+  }
+
+  const goToNextPage = () => goToPage(currentPage + 1)
+  const goToPrevPage = () => goToPage(currentPage - 1)
 
   const loadTransactions = useCallback(async () => {
     if (filterMode === 'current' && user?.address) {
@@ -66,6 +82,9 @@ export default function TransactionHistoryPage() {
     // Load export preview
     const preview = await exportTransactionsForReport()
     setExportPreview(preview)
+    
+    // Reset to page 1 when filter changes
+    setCurrentPage(1)
   }, [filterMode, user?.address])
 
   useEffect(() => {
@@ -235,49 +254,115 @@ export default function TransactionHistoryPage() {
                 <p className="text-sm">Start making transactions to see them here</p>
               </div>
             ) : (
-              <div className="space-y-2">
-                {transactions.map((tx, index) => (
-                  <div
-                    key={tx.digest}
-                    className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors gap-2"
-                  >
-                    <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-1">
-                        <span className="text-sm font-medium">#{index + 1}</span>
-                        <Badge variant="outline" className="text-xs">
-                          {tx.type}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground">
-                          {new Date(tx.timestamp).toLocaleString()}
-                        </span>
+              <>
+                <div className="space-y-2">
+                  {paginatedTransactions.map((tx, index) => {
+                    const globalIndex = startIndex + index
+                    return (
+                      <div
+                        key={tx.digest}
+                        className="flex flex-col sm:flex-row sm:items-center justify-between p-3 border rounded-lg hover:bg-muted/50 transition-colors gap-2"
+                      >
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="text-sm font-medium">#{globalIndex + 1}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {tx.type}
+                            </Badge>
+                            <span className="text-xs text-muted-foreground">
+                              {new Date(tx.timestamp).toLocaleString()}
+                            </span>
+                          </div>
+                          <div className="font-mono text-xs break-all">
+                            Digest: {tx.digest}
+                          </div>
+                          <div className="font-mono text-xs text-muted-foreground break-all">
+                            Address: {tx.address}
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-1 sm:ml-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => copyToClipboard(tx.digest)}
+                          >
+                            <Copy className="h-3 w-3" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => openInExplorer(tx.digest)}
+                          >
+                            <ExternalLink className="h-3 w-3" />
+                          </Button>
+                        </div>
                       </div>
-                      <div className="font-mono text-xs break-all">
-                        Digest: {tx.digest}
-                      </div>
-                      <div className="font-mono text-xs text-muted-foreground break-all">
-                        Address: {tx.address}
-                      </div>
+                    )
+                  })}
+                </div>
+
+                {/* Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="flex items-center justify-between mt-6 pt-4 border-t">
+                    <div className="text-sm text-muted-foreground">
+                      Showing {startIndex + 1}-{Math.min(endIndex, transactions.length)} of {transactions.length} transactions
                     </div>
                     
-                    <div className="flex gap-1 sm:ml-2">
+                    <div className="flex items-center gap-2">
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() => copyToClipboard(tx.digest)}
+                        onClick={goToPrevPage}
+                        disabled={currentPage === 1}
                       >
-                        <Copy className="h-3 w-3" />
+                        <ChevronLeft className="h-4 w-4" />
+                        Previous
                       </Button>
+                      
+                      <div className="flex items-center gap-1">
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          // Show first page, last page, current page, and pages around current
+                          const showPage = 
+                            page === 1 || 
+                            page === totalPages || 
+                            Math.abs(page - currentPage) <= 1
+
+                          if (!showPage) {
+                            // Show ellipsis
+                            if (page === currentPage - 2 || page === currentPage + 2) {
+                              return <span key={page} className="px-2 text-muted-foreground">...</span>
+                            }
+                            return null
+                          }
+
+                          return (
+                            <Button
+                              key={page}
+                              variant={currentPage === page ? 'default' : 'outline'}
+                              size="sm"
+                              onClick={() => goToPage(page)}
+                              className="w-9"
+                            >
+                              {page}
+                            </Button>
+                          )
+                        })}
+                      </div>
+                      
                       <Button
-                        variant="ghost"
+                        variant="outline"
                         size="sm"
-                        onClick={() => openInExplorer(tx.digest)}
+                        onClick={goToNextPage}
+                        disabled={currentPage === totalPages}
                       >
-                        <ExternalLink className="h-3 w-3" />
+                        Next
+                        <ChevronRight className="h-4 w-4" />
                       </Button>
                     </div>
                   </div>
-                ))}
-              </div>
+                )}
+              </>
             )}
           </CardContent>
         </Card>

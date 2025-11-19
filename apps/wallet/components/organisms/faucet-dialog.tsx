@@ -64,7 +64,7 @@ export function FaucetDialog({ address, onSuccess }: FaucetDialogProps) {
       <DialogTrigger asChild>
         <Button variant="outline">
           <Droplet className="h-4 w-4 mr-2" />
-          Get Devnet SUI
+          Faucet SUI
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-md">
