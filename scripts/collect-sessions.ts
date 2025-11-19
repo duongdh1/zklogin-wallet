@@ -13,7 +13,7 @@ const __dirname = path.dirname(__filename)
 
 // Configuration
 const WALLET_URL = 'https://zklogin-wallet-wallet.vercel.app/'
-const NUM_SESSIONS = 3
+const NUM_SESSIONS = 100
 const OUTPUT_FILE = path.join(__dirname, 'wallets.json')
 const STARTING_PIN = 111111
 
