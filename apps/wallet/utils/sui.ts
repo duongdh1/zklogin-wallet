@@ -83,7 +83,7 @@ export async function fetchTransactions(address: string): Promise<TransactionRec
           showInput: true,
           showEvents: true,
         },
-        limit: 10,
+        limit: 50,
         order: 'descending'
       }),
       suiClient.queryTransactionBlocks({
@@ -95,65 +95,122 @@ export async function fetchTransactions(address: string): Promise<TransactionRec
           showInput: true,
           showEvents: true,
         },
-        limit: 10,
+        limit: 50,
         order: 'descending'
       })
     ])
 
     const transactions: TransactionRecord[] = []
+    const processedDigests = new Set<string>()
     
-    console.log('Sent transactions:', sentTxns.data)
     // Process sent transactions
     for (const txn of sentTxns.data) {
+      if (processedDigests.has(txn.digest)) continue
+      processedDigests.add(txn.digest)
+      
       const effects = txn.effects
       const status = effects?.status?.status === 'success' ? 'completed' : 'failed'
       const timestamp = new Date(Number(txn.timestampMs || 0)).toLocaleString()
       
-      // Extract amount from transaction effects
+      // Extract amount and recipient from transaction inputs
+      let amount = '0'
+      let recipient = 'Unknown'
+      
+      try {
+        const txData = txn.transaction?.data
+        if (txData && 'transaction' in txData) {
+          const programmableTx = txData.transaction
+          if ('inputs' in programmableTx && Array.isArray(programmableTx.inputs)) {
+            // First input is usually the amount (u64)
+            const amountInput = programmableTx.inputs[0]
+            if (amountInput && 'value' in amountInput) {
+              const amountMist = BigInt(amountInput.value as string)
+              amount = (Number(amountMist) / 1_000_000_000).toString()
+            }
+            
+            // Second input is usually the recipient address
+            const recipientInput = programmableTx.inputs[1]
+            if (recipientInput && 'value' in recipientInput) {
+              recipient = recipientInput.value as string
+            }
+          }
+        }
+      } catch (e) {
+        console.error('Failed to parse transaction inputs:', e)
+      }
+      
       const gasUsed = effects?.gasUsed?.computationCost || '0'
-      const amount = '0' // This would need more complex parsing to extract actual transfer amounts
+      const gasFee = (Number(gasUsed) / 1_000_000_000).toString()
       
       transactions.push({
         id: txn.digest,
         type: 'send',
-        amount: amount,
+        amount,
         symbol: 'SUI',
         status: status as 'completed' | 'pending' | 'failed',
         timestamp,
         hash: txn.digest,
-        gasFee: gasUsed,
-        to: 'Unknown', // Would need to parse from transaction
+        gasFee,
+        to: recipient,
         from: normalizedAddress
       })
     }
-    console.log('Received transactions:', receivedTxns.data)
+    
     // Process received transactions
     for (const txn of receivedTxns.data) {
+      if (processedDigests.has(txn.digest)) continue
+      processedDigests.add(txn.digest)
+      
       const effects = txn.effects
       const status = effects?.status?.status === 'success' ? 'completed' : 'failed'
       const timestamp = new Date(Number(txn.timestampMs || 0)).toLocaleString()
       
+      // Extract amount and sender from transaction
+      let amount = '0'
+      let sender = 'Unknown'
+      
+      try {
+        const txData = txn.transaction?.data
+        if (txData && 'transaction' in txData) {
+          const programmableTx = txData.transaction
+          if ('inputs' in programmableTx && Array.isArray(programmableTx.inputs)) {
+            // First input is usually the amount
+            const amountInput = programmableTx.inputs[0]
+            if (amountInput && 'value' in amountInput) {
+              const amountMist = BigInt(amountInput.value as string)
+              amount = (Number(amountMist) / 1_000_000_000).toString()
+            }
+          }
+        }
+        
+        // Sender is in the transaction data
+        if (txData && 'sender' in txData) {
+          sender = txData.sender
+        }
+      } catch (e) {
+        console.error('Failed to parse transaction:', e)
+      }
+      
       transactions.push({
         id: txn.digest,
         type: 'receive',
-        amount: '0', // Would need to parse from transaction
+        amount,
         symbol: 'SUI',
         status: status as 'completed' | 'pending' | 'failed',
         timestamp,
         hash: txn.digest,
-        gasFee: '0', // No gas fee for received transactions
-        from: 'Unknown', // Would need to parse from transaction
+        gasFee: '0',
+        from: sender,
         to: normalizedAddress
       })
     }
     
-    // Sort by timestamp (newest first) and limit to 20
+    // Sort by timestamp (newest first)
     transactions.sort((a, b) => new Date(b.timestamp).getTime() - new Date(a.timestamp).getTime())
     
-    return transactions.slice(0, 20)
+    return transactions
   } catch (error) {
     console.error('Failed to fetch transactions:', error)
-    // Return mock data on error for now
     return []
   }
 }

@@ -11,7 +11,6 @@ import { FaucetDialog } from '../components/organisms/faucet-dialog'
 import { MintNftDialog } from '../components/organisms/mint-nft-dialog'
 import { NumberDisplay } from '../components/atoms/number-display'
 import { WalletAddress } from '../components/atoms/wallet-address'
-import { TrendingUp, TrendingDown } from 'lucide-react'
 import { TokenBalance as TokenBalanceType } from '../utils/sui'
 
 export default function Page() {
@@ -62,9 +61,8 @@ export default function Page() {
                 <div className="text-3xl font-bold">
                   <NumberDisplay value={totalValue} prefix="$" />
                 </div>
-                <div className="flex items-center space-x-2 text-sm text-muted-foreground">
-                  <TrendingUp className="h-4 w-4 text-green-500" />
-                  <span>+2.5% (24h)</span>
+                <div className="text-sm text-muted-foreground mt-1">
+                  Last updated: {new Date().toLocaleTimeString()}
                 </div>
               </div>
               <div className="text-right">

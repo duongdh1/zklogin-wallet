@@ -21,8 +21,9 @@ export default function SpotTradingPage() {
   ]
 
   const handleSwap = () => {
-    // Swap logic here
+    // TODO: Implement swap logic with actual DEX integration
     console.log(`${activeTab} ${fromAmount} SUI for ${toAmount} USD`)
+    alert('Swap feature is not yet implemented. This requires DEX integration.')
   }
 
   const handleFlipTokens = () => {
@@ -78,7 +79,7 @@ export default function SpotTradingPage() {
                   </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
-                  Balance: <NumberDisplay value="1,250.50" decimals={2} /> SUI
+                  Balance: 0 SUI (Demo data)
                 </div>
               </div>
 
@@ -117,23 +118,26 @@ export default function SpotTradingPage() {
                   </div>
                 </div>
                 <div className="text-right text-sm text-muted-foreground">
-                  ≈ <NumberDisplay value="2.45" prefix="$" /> per SUI
+                  Price: Demo data only
                 </div>
               </div>
 
-              {/* Price Impact */}
+              {/* Price Impact - Demo data */}
               <div className="p-3 bg-muted/30 rounded-lg">
+                <div className="text-sm text-center text-muted-foreground mb-2">
+                  ⚠️ Swap feature requires DEX integration
+                </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Price Impact</span>
-                  <span className="text-green-600">0.01%</span>
+                  <span className="text-muted-foreground">N/A</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Minimum received</span>
-                  <span><NumberDisplay value="245.00" prefix="$" /></span>
+                  <span className="text-muted-foreground">N/A</span>
                 </div>
                 <div className="flex justify-between text-sm">
                   <span className="text-muted-foreground">Network Fee</span>
-                  <span><NumberDisplay value="0.001" /> SUI</span>
+                  <span className="text-muted-foreground">~0.001 SUI</span>
                 </div>
               </div>
 
