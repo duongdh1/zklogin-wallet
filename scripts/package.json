@@ -1,0 +1,20 @@
+{
+  "name": "zklogin-scripts",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "collect": "tsx collect-sessions.ts",
+    "generate": "tsx generate-multi-jwt.ts",
+    "verify": "tsx verify-transactions.ts"
+  },
+  "dependencies": {
+    "@mysten/sui": "^1.17.1",
+    "jwt-decode": "^4.0.0",
+    "playwright": "^1.48.0"
+  },
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "tsx": "^4.7.0",
+    "typescript": "^5.3.3"
+  }
+}

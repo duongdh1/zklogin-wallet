@@ -1,0 +1,7 @@
+node_modules/
+dist/
+transaction-reports/
+session.json
+wallets.json
+*.log
+.env
