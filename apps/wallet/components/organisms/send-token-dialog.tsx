@@ -45,8 +45,32 @@ export function SendTokenDialog({ balances, onSend, onSuccess }: SendTokenDialog
   const handleSend = async () => {
     if (!selectedToken || !amount || !recipient) return
     
+    // Validate amount
+    const numAmount = Number(amount)
+    if (isNaN(numAmount) || numAmount <= 0) {
+      toast.error('Please enter a valid amount')
+      return
+    }
+    
+    // Find selected token data
+    const tokenData = balances.find(b => b.coinType === selectedToken)
+    if (!tokenData) {
+      toast.error('Invalid token selected')
+      return
+    }
+    
+    // Check if amount exceeds balance
+    if (numAmount > Number(tokenData.balance)) {
+      toast.error('Insufficient balance')
+      return
+    }
+    
     // Store transaction data and show PIN form
-    setTransactionData({ token: selectedToken, amount, recipient })
+    setTransactionData({ 
+      token: tokenData.symbol, // Display symbol
+      amount, 
+      recipient 
+    })
     setShowPinForm(true)
   }
 
@@ -62,11 +86,11 @@ export function SendTokenDialog({ balances, onSend, onSuccess }: SendTokenDialog
         throw new Error('No active zkLogin session found')
       }
 
-      // Create transfer transaction
+      // Create transfer transaction (use coinType not symbol)
       const transaction: Transaction = createTransferTransaction(
         transactionData.recipient, 
         transactionData.amount, 
-        transactionData.token
+        selectedToken // This is coinType from the Select
       )
       
       // Sign and execute transaction with PIN
@@ -113,7 +137,7 @@ export function SendTokenDialog({ balances, onSend, onSuccess }: SendTokenDialog
     setTransactionError('')
   }
 
-  const selectedTokenData = balances.find(b => b.symbol === selectedToken)
+  const selectedTokenData = balances.find(b => b.coinType === selectedToken)
   const maxAmount = selectedTokenData?.balance || '0'
 
   return (

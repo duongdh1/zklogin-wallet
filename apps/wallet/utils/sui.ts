@@ -267,17 +267,27 @@ export async function signTransactionWithZkLogin(
 
     // Prepare inputs for zkLogin signature
     // Check if zkProof has proofPoints wrapper or is direct {a, b, c}
-    const proofPoints = 'proofPoints' in zkLoginSessionData.zkProof && zkLoginSessionData.zkProof.proofPoints
-      ? zkLoginSessionData.zkProof.proofPoints 
-      : (zkLoginSessionData.zkProof as { a: string[]; b: string[][]; c: string[] })
-
-    if (!proofPoints || !proofPoints.a || !proofPoints.b || !proofPoints.c) {
-      throw new Error('Invalid zkProof structure')
+    if (!zkLoginSessionData.zkProof) {
+      throw new Error('ZK proof not found')
+    }
+    
+    // Extract proof points - handle both wrapped and unwrapped formats
+    const proofPoints = zkLoginSessionData.zkProof.proofPoints ?? zkLoginSessionData.zkProof
+    
+    if (!proofPoints.a || !proofPoints.b || !proofPoints.c) {
+      throw new Error('Invalid zkProof structure: missing proof points')
+    }
+    
+    // Type assertion for the correct structure expected by getZkLoginSignature
+    const validProofPoints = {
+      a: proofPoints.a as string[],
+      b: proofPoints.b as string[][],
+      c: proofPoints.c as string[]
     }
 
     console.log('signature inputs', {
       inputs: {
-        proofPoints,
+        proofPoints: validProofPoints,
         issBase64Details: jwtInfo.issBase64Details,
         headerBase64: jwtInfo.headerBase64,
         addressSeed: addressSeed,
@@ -289,7 +299,7 @@ export async function signTransactionWithZkLogin(
     // Generate the zkLogin signature
     const zkLoginSignature = getZkLoginSignature({
       inputs: {
-        proofPoints,
+        proofPoints: validProofPoints,
         issBase64Details: jwtInfo.issBase64Details,
         headerBase64: jwtInfo.headerBase64,
         addressSeed: addressSeed,
@@ -328,12 +338,25 @@ export function createTransferTransaction(
 
   const txb = new Transaction()
   
-  // Convert amount to MIST using BigInt for precision (following zklogin pattern)
-  const amountMist = toMist(amount)
-  
-  // Split coins and transfer (no manual gas budget needed)
-  const [coin] = txb.splitCoins(txb.gas, [amountMist])
-  txb.transferObjects([coin], recipient)
+  // For SUI (native gas token), we can use txb.gas directly
+  if (coinType === '0x2::sui::SUI') {
+    // Convert amount to MIST using BigInt for precision
+    const amountMist = toMist(amount)
+    
+    // Split coins and transfer
+    const [coin] = txb.splitCoins(txb.gas, [amountMist])
+    txb.transferObjects([coin], recipient)
+  } else {
+    // For other tokens (USDC, WETH, etc.), we need to handle differently
+    // This is a simplified version - in production you'd need to:
+    // 1. Get coin objects for the specific coinType
+    // 2. Merge them if needed
+    // 3. Split the desired amount
+    // 4. Transfer
+    
+    // For now, throw an error for non-SUI tokens
+    throw new Error('Transferring non-SUI tokens is not yet supported. Please use SUI only.')
+  }
   
   return txb
 }
