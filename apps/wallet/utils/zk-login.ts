@@ -2,7 +2,7 @@
 
 import { SuiClient } from '@mysten/sui/client'
 import { Ed25519Keypair } from '@mysten/sui/keypairs/ed25519'
-import { 
+import {
   generateNonce,
   generateRandomness,
   jwtToAddress
@@ -30,7 +30,7 @@ interface JwtPayload {
 
 export function validateZkLoginSession(session: ZkLoginSession | null): boolean {
   if (!session) return false
-  
+
   try {
     // Check if all required fields are present
     if (!session.ephemeralSecretKey || !session.zkProof || !session.maxEpoch) {
@@ -49,9 +49,9 @@ export function validateZkLoginSession(session: ZkLoginSession | null): boolean 
 
 // Helper functions for zkLogin OAuth flow
 export async function generateZkLoginProof(
-  jwt: JwtPayload, 
+  jwt: JwtPayload,
   ephemeralKeyPair: Ed25519Keypair,
-  maxEpoch: number, 
+  maxEpoch: number,
   randomness: string,
   jwtToken: string,
   salt: string
@@ -64,20 +64,30 @@ export async function generateZkLoginProof(
     console.log('Max epoch:', maxEpoch)
     console.log('JWT:', jwtToken)
     console.log('Salt:', salt)
-    
+
+    const param = {
+      jwt: "eyJhbGciOiJSUzI1NiIsImtpZCI6ImQ1NDNlMjFhMDI3M2VmYzY2YTQ3NTAwMDI0NDFjYjIxNTFjYjIzNWYiLCJ0eXAiOiJKV1QifQ.eyJpc3MiOiJodHRwczovL2FjY291bnRzLmdvb2dsZS5jb20iLCJhenAiOiI2NzM0OTY0NjA0NDYtY2RsY2l1NW9xaWQwdjg5aTQ5Y2JsMDUzanF1MmJhYTUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJhdWQiOiI2NzM0OTY0NjA0NDYtY2RsY2l1NW9xaWQwdjg5aTQ5Y2JsMDUzanF1MmJhYTUuYXBwcy5nb29nbGV1c2VyY29udGVudC5jb20iLCJzdWIiOiIxMDUyODU1NTQ5NjcxNDA1Mjk5OTciLCJoZCI6InR3ZW5kZWVzb2Z0LmNvbSIsImVtYWlsIjoiZHVvbmdkaEB0d2VuZGVlc29mdC5jb20iLCJlbWFpbF92ZXJpZmllZCI6dHJ1ZSwibm9uY2UiOiJXZkg0blNZVTBBWWRfMk9mMnV0X2RTdk81aTQiLCJuYmYiOjE3NjQ5MDcyMDMsIm5hbWUiOiJEdW9uZyBEbyBIYWkiLCJwaWN0dXJlIjoiaHR0cHM6Ly9saDMuZ29vZ2xldXNlcmNvbnRlbnQuY29tL2EvQUNnOG9jSTJ4VFF3Qmc0WEoxbXdTUFRQTkRRak90andrOU5wWVl4VTlMT2c2MWlFTkhaN0lIcz1zOTYtYyIsImdpdmVuX25hbWUiOiJEdW9uZyIsImZhbWlseV9uYW1lIjoiRG8gSGFpIiwiaWF0IjoxNzY0OTA3NTAzLCJleHAiOjE3NjQ5MTExMDMsImp0aSI6ImEwMmZiYTY0MmQ5MzEyMzA5MjAyZmY5NjAxNzA1NTM3NzA4OGExNzYifQ.rV-vzr-KX5tMyhuPln5sZWTNALfd2g3ebys7jKSsR97dU5OZLO6THiP_mfAeDY_D74n04hnJlkHWCWT0a6HkSywg7kagO7MlQupZa_7oA47WrT1NUiDWnbdktEc_6PMtqPGnXqtWoF_Wx9FGopmT5AAXw47H56BAr6hgRF1jYHYfmcIqpw9pmK9JuL74kdqA15iZ11xuLWjsRfmd2UgyiPnfI4cQFPd5a45sDfHAonFrPFdJvk0wvY_0UEvGfCdGVUGWDDYl5pK5OjTcxtx8m4EaDxdBdmb6WSZax1fD0ZdlqP4yQem7X4EmHfGTEpgt2y_K3YS67V7VjLR8kiVCwA",
+      extendedEphemeralPublicKey: "rtVXAtBgk3EoQnGhCdet6jk3ZZfXKs/gGML2nEyiP/8=",
+      jwtRandomness: "190676187180281778984066055321118743337",
+      maxEpoch: "83",
+      keyClaimName: "sub",
+      keyClaimValue: "105285554967140529997",
+      salt: "MTExMTEx"
+    }
     const response = await fetch(PROVER_URL, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
       },
-      body: JSON.stringify({
-        jwt: jwtToken,
-        extendedEphemeralPublicKey: ephemeralKeyPair.getPublicKey().toBase64(),
-        jwtRandomness: randomness,
-        maxEpoch,
-        keyClaimName: 'sub',
-        salt,
-      }),
+      // body: JSON.stringify({
+      //   jwt: jwtToken,
+      //   extendedEphemeralPublicKey: ephemeralKeyPair.getPublicKey().toBase64(),
+      //   jwtRandomness: randomness,
+      //   maxEpoch,
+      //   keyClaimName: 'sub',
+      //   salt,
+      // }),
+      body: JSON.stringify(param),
     })
 
     if (!response.ok) {
@@ -112,7 +122,7 @@ export async function processOAuthCallback(
 }> {
   // Decode JWT
   const decodedJwt = jwtDecode(idToken) as JwtPayload
-  
+
   if (!decodedJwt.sub || !decodedJwt.aud || !decodedJwt.nonce) {
     throw new Error('Invalid JWT: missing required fields')
   }
@@ -123,25 +133,25 @@ export async function processOAuthCallback(
 
   // Use the ephemeral key pair from OAuth flow
   console.log('Stored secret key string:', zkLoginSessionData.ephemeralSecretKey)
-  
+
   // Recreate the keypair from the stored secret key
   const ephemeralKeyPair: Ed25519Keypair = Ed25519Keypair.fromSecretKey(zkLoginSessionData.ephemeralSecretKey)
-  
+
   const zkProof = await generateZkLoginProof(
-    decodedJwt, 
+    decodedJwt,
     ephemeralKeyPair,
-    zkLoginSessionData.maxEpoch, 
-    zkLoginSessionData.randomness, 
+    zkLoginSessionData.maxEpoch,
+    zkLoginSessionData.randomness,
     idToken,
     userSalt
   )
-  
+
   // Generate Sui address
   console.log('zkProof:', zkProof)
   console.log('userSalt:', userSalt)
   const suiAddress = jwtToAddress(idToken, userSalt)
   console.log('suiAddress:', suiAddress)
-  
+
   return {
     user: {
       address: suiAddress,
@@ -171,11 +181,11 @@ export async function prepareZkLoginSession(
   }
 ): Promise<void> {
   // Get Sui client
-  const suiClient = new SuiClient({ url: 'https://fullnode.devnet.sui.io' })
-  
+  const suiClient = new SuiClient({ url: 'https://fullnode.testnet.sui.io' })
+
   // Decode JWT
   const decodedJwt = jwtDecode(idToken) as JwtPayload
-  
+
   if (!decodedJwt.sub || !decodedJwt.aud || !decodedJwt.nonce) {
     throw new Error('Invalid JWT: missing required fields')
   }
@@ -184,7 +194,7 @@ export async function prepareZkLoginSession(
   const nonce = decodedJwt.nonce
 
   // Retrieve stored zkLogin session data from sessionStorage
-  const storedSessionData = typeof window !== 'undefined' 
+  const storedSessionData = typeof window !== 'undefined'
     ? sessionStorage.getItem('zkLoginSessionData')
     : null
 
@@ -219,18 +229,18 @@ export async function initializeZkLoginSession(suiClient: SuiClient): Promise<{
   // Generate ephemeral key pair
   const ephemeralKeyPair = new Ed25519Keypair()
   const randomness = generateRandomness()
-  
+
   // Get current epoch info
   const { epoch } = await suiClient.getLatestSuiSystemState()
   const maxEpoch = Number(epoch) + 2
-  
+
   // Generate nonce
   const nonce = generateNonce(ephemeralKeyPair.getPublicKey(), maxEpoch, randomness)
-  
+
   // Prepare OAuth flow data to be stored
   const secretKeyString = ephemeralKeyPair.getSecretKey()
   console.log('Secret key string:', secretKeyString)
-  
+
   const zkLoginSessionData: ZkLoginSession = {
     ephemeralSecretKey: secretKeyString,
     randomness,

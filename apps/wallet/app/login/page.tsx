@@ -18,7 +18,7 @@ import { AlertCircle } from 'lucide-react'
 import styles from './page.module.css'
 
 // Sui network configuration
-const SUI_NETWORK = process.env.NEXT_PUBLIC_SUI_CHAIN || 'devnet'
+const SUI_NETWORK = process.env.NEXT_PUBLIC_SUI_CHAIN || 'testnet'
 
 // Global flag to ensure we only process tokens once
 let hasProcessedTokens = false

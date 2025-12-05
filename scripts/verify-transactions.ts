@@ -6,7 +6,7 @@ import { SuiClient } from '@mysten/sui/client'
 import * as fs from 'fs'
 import * as path from 'path'
 
-const SUI_CLIENT = new SuiClient({ url: 'https://fullnode.devnet.sui.io' })
+const SUI_CLIENT = new SuiClient({ url: 'https://fullnode.testnet.sui.io' })
 
 interface AddressTransactions {
   address?: string

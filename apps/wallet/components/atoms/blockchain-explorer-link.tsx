@@ -19,7 +19,7 @@ export function BlockchainExplorerLink({
   // Determine the correct explorer URL based on the network
   const getExplorerUrl = () => {
     if (suiChain === SUI_CHAINS.DEVNET) {
-      return `https://suiscan.xyz/devnet/account/${address}`
+      return `https://suiscan.xyz/testnet/account/${address}`
     } else {
       // Default to mainnet
       return `https://suiscan.xyz/mainnet/account/${address}`

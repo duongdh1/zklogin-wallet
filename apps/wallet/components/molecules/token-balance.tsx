@@ -35,7 +35,8 @@ export function TokenBalance({ address, onBalancesChange, refreshTrigger }: Toke
     if (address) {
       fetchBalances()
     }
-  }, [address, refreshTrigger, onBalancesChange])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [address, refreshTrigger])
 
   const calculateTotalValue = (balances: TokenBalanceType[]): number => {
     return balances.reduce((total, token) => total + parseFloat(token.usdValue), 0)

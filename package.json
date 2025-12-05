@@ -22,6 +22,7 @@
     "packages/*"
   ],
   "dependencies": {
+    "@mysten/seal": "^0.9.6",
     "next": "^16.0.3"
   }
 }

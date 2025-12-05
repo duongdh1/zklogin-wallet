@@ -10,7 +10,8 @@ import {
   Settings, 
   LogOut,
   User,
-  History
+  History,
+  FileText,
 } from 'lucide-react'
 import { useAuth } from '@/contexts/auth-context'
 import {
@@ -92,6 +93,11 @@ export function AuthenticatedLayout({ children, breadcrumbItems, balances, onSen
       href: '/transaction-history',
       icon: History,
       label: 'TX History'
+    },
+    {
+      href: '/files',
+      icon: FileText,
+      label: 'Files'
     }
   ]
 

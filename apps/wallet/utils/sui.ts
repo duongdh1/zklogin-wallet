@@ -30,7 +30,7 @@ export interface TransactionRecord {
 }
 
 export const SUI_CHAINS = {
-  DEVNET: 'devnet',
+  DEVNET: 'testnet',
   TESTNET: 'testnet',
   MAINNET: 'mainnet'
 }
@@ -66,7 +66,7 @@ export const TOKEN_METADATA: { [key: string]: { symbol: string; name: string; de
 }
 
 // Sui client instance
-export const suiClient = new SuiClient({ url: 'https://fullnode.devnet.sui.io' })
+export const suiClient = new SuiClient({ url: 'https://fullnode.testnet.sui.io' })
 
 export async function fetchTransactions(address: string): Promise<TransactionRecord[]> {
   try {
@@ -375,7 +375,7 @@ export function createSwapTransaction(
 }
 
 /**
- * Request SUI from devnet faucet
+ * Request SUI from testnet faucet
  * @param recipient Wallet address to receive SUI
  * @returns Promise that resolves when faucet request is complete
  */
@@ -383,8 +383,8 @@ export async function requestDevnetSui(recipient: string): Promise<{ success: bo
   try {
     const normalizedAddress = normalizeSuiAddress(recipient)
     
-    // Request from devnet faucet (v2 endpoint gives 10 SUI)
-    const response = await fetch('https://faucet.devnet.sui.io/v2/gas', {
+    // Request from testnet faucet (v2 endpoint gives 10 SUI)
+    const response = await fetch('https://faucet.testnet.sui.io/v2/gas', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -409,7 +409,7 @@ export async function requestDevnetSui(recipient: string): Promise<{ success: bo
 
     return {
       success: true,
-      message: 'Successfully requested 10 SUI from devnet faucet',
+      message: 'Successfully requested 10 SUI from testnet faucet',
       digest,
     }
   } catch (error) {

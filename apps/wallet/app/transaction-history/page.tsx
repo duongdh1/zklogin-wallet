@@ -121,7 +121,7 @@ export default function TransactionHistoryPage() {
   }
 
   const openInExplorer = (digest: string) => {
-    window.open(`https://suiscan.xyz/devnet/tx/${digest}`, '_blank')
+    window.open(`https://suiscan.xyz/testnet/tx/${digest}`, '_blank')
   }
 
   return (

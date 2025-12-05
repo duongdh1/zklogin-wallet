@@ -20,7 +20,7 @@ export function DevnetBanner() {
     return null
   }
 
-  // Only show banner when SUI_CHAIN is set to 'devnet'
+  // Only show banner when SUI_CHAIN is set to 'testnet'
   if (!isDevnet) {
     return null
   }
@@ -28,7 +28,7 @@ export function DevnetBanner() {
   return (
     <div className="fixed bottom-2 right-2 z-50">
       <Badge variant="destructive" className="px-3 py-1 rounded-full text-xs font-medium uppercase">
-        devnet
+        testnet
       </Badge>
     </div>
   )

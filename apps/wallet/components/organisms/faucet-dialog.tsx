@@ -71,7 +71,7 @@ export function FaucetDialog({ address, onSuccess }: FaucetDialogProps) {
         <DialogHeader>
           <DialogTitle>Request Devnet SUI</DialogTitle>
           <DialogDescription>
-            Get free SUI tokens from the devnet faucet for testing
+            Get free SUI tokens from the testnet faucet for testing
           </DialogDescription>
         </DialogHeader>
         
@@ -79,7 +79,7 @@ export function FaucetDialog({ address, onSuccess }: FaucetDialogProps) {
           <div className="p-4 bg-muted rounded-lg">
             <div className="text-sm space-y-2">
               <p>
-                This will request <strong>10 SUI</strong> from the Sui devnet faucet.
+                This will request <strong>10 SUI</strong> from the Sui testnet faucet.
               </p>
               <p className="text-muted-foreground">
                 Devnet tokens have no real value and are only for testing purposes.

@@ -26,8 +26,8 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <head>
+    <html lang="en" suppressHydrationWarning>
+      <body className={`${geistSans.variable} ${geistMono.variable}`} suppressHydrationWarning>
         <Script id="oauth-hash-capture" strategy="beforeInteractive">
           {`
             if (typeof window !== 'undefined' && window.location.hash) {
@@ -36,8 +36,6 @@ export default function RootLayout({
             }
           `}
         </Script>
-      </head>
-      <body className={`${geistSans.variable} ${geistMono.variable}`}>
         <AuthProvider>
           <DevnetBanner />
           {children}

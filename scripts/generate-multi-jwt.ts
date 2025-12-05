@@ -59,8 +59,8 @@ interface WalletData {
 }
 
 // Configuration
-const FAUCET_URL = 'https://faucet.devnet.sui.io/v2/gas'
-const SUI_CLIENT = new SuiClient({ url: 'https://fullnode.devnet.sui.io' })
+const FAUCET_URL = 'https://faucet.testnet.sui.io/v2/gas'
+const SUI_CLIENT = new SuiClient({ url: 'https://fullnode.testnet.sui.io' })
 const TOTAL_TRANSACTIONS = 4
 const TRANSFER_AMOUNT = 1_000_000_000 // 1 SUI
 
